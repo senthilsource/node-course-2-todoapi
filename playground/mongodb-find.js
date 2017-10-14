@@ -13,7 +13,7 @@ db.collection("Users").find({_id:new ObjectID("59e210d95a94b50668f3e39c")}).toAr
   errLog(err);
 });
 
-db.collection("Users").find({name:'kumar'}).toArray().then((docs)=>{
+db.collection("Users").find({name:'kumar1'}).toArray().then((docs)=>{
   infoLog(docs);
 }, (err)=>{
   errLog(err);
