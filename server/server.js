@@ -52,6 +52,29 @@ app.get("/todos/:id", (req, res)=>{
     res.status(500).send("Error finding records");
   });
 
+});
+
+app.delete("/todos/:id", (req, res)=>{
+  var id = req.params.id;
+  if(!ObjectID.isValid(id)){
+    console.log("Id is not valid");
+    return res.status(404).send("Id is not valid");
+  }
+
+  todoModel.findByIdAndRemove(id).then((todos)=>{
+    if(!todos){
+      return res.status(400).send();
+    }else{
+      res.send(todos);
+    }
+  }, (err)=>{
+    if(err){
+      res.status(500).send("Error finding records");
+    }
+  }).catch((e)=>{
+    res.status(500).send("Error finding records");
+  });
+
 })
 
 app.listen(port, () => {
