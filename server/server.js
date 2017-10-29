@@ -1,3 +1,4 @@
+const _=require("lodash");
 var express = require("express");
 var bodyParser = require("body-parser");
 var {ObjectID} = require("mongodb");
@@ -75,7 +76,34 @@ app.delete("/todos/:id", (req, res)=>{
     res.status(500).send("Error finding records");
   });
 
-})
+});
+
+
+app.patch("/todos/:id", (req, res)=>{
+var id = req.params.id;
+var body=_.pick(req.body, ["text", "completed"]);
+
+if(!ObjectID.isValid(id)){
+  console.log("Id is not valid");
+  return res.status(404).send("Id is not valid");
+}
+
+if(_.isBoolean(body.completed) && body.completed){
+  body.completedAt = new Date().getTime();
+}else{
+  body.completedAt = null;
+  body.completed = false;
+}
+
+todoModel.findByIdAndUpdate(id, {$set:body}, {new:true}).then((todos)=>{
+  if(!todos){
+    return res.status(404).send("Id is not valid");
+  }
+  return res.send(todos);
+}).catch((e)=>{
+  return res.status(404).send();
+});
+});
 
 app.listen(port, () => {
   console.log(`App started in port ${port}`);
