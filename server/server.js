@@ -1,19 +1,14 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var {ObjectID} = require("mongodb");
-var {
-  mongoose
-} = require("../server/db/mongoose");
-var {
-  userModel
-} = require("../server/models/users");
-var {
-  todoModel
-} = require("../server/models/todo");
+var {mongoose} = require("../server/db/mongoose");
+var {userModel} = require("../server/models/users");
+var {todoModel} = require("../server/models/todo");
 
-
+var port = process.env.PORT || 3000;
 var app = express();
 app.use(bodyParser.json());
+
 app.post("/todos", (req, res) => {
 
   var todos = new todoModel({
@@ -59,8 +54,8 @@ app.get("/todos/:id", (req, res)=>{
 
 })
 
-app.listen(3000, () => {
-  console.log("App started in port 3000");
+app.listen(port, () => {
+  console.log(`App started in port ${port}`);
 })
 
 
