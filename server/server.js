@@ -5,6 +5,8 @@ var {ObjectID} = require("mongodb");
 var {mongoose} = require("../server/db/mongoose");
 var {userModel} = require("../server/models/users");
 var {todoModel} = require("../server/models/todo");
+var config = require("../server/config/config.js");
+
 
 var port = process.env.PORT || 3000;
 var app = express();
@@ -22,6 +24,19 @@ app.post("/todos", (req, res) => {
     res.status(400).send(err);
   });
 
+});
+
+app.post("/users", (req, res)=>{
+var body = _.pick(req.body, ["email", "password"]);
+var user = new userModel(body);
+user.save().then(()=>{
+  return user.generateAuthToken();
+  //res.status(200).send(results);
+}).then((token)=>{
+  res.header("x-auth", token).send(user);
+}).catch((e)=>{
+  res.status(400).send(e);
+});
 });
 
 app.get("/todos", (req, res)=>{
