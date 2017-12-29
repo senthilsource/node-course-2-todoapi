@@ -1,73 +1,91 @@
-var {mongoose} = require("../db/mongoose");
+var { mongoose } = require("../db/mongoose");
 var validator = require("validator");
 var jwt = require("jsonwebtoken");
-var _=require("lodash");
+var _ = require("lodash");
+const bcrypt = require("bcryptjs");
 
 var UserSchema = new mongoose.Schema({
-  email:{
+  email: {
     type: String,
     require: true,
     minlength: 1,
     trim: true,
-    unique:true,
-    validate:{
-      validator:validator.isEmail,
-      message:'{VALUE} is not a valid email'
+    unique: true,
+    validate: {
+      validator: validator.isEmail,
+      message: '{VALUE} is not a valid email'
     }
   },
-  password:{
-    type:String,
-    require:true,
-    minlength:6
+  password: {
+    type: String,
+    require: true,
+    minlength: 6
   },
-  tokens:[{
-    access:{
-      type:String,
-      required:true
+  tokens: [{
+    access: {
+      type: String,
+      required: true
     },
-    token:{
-      type:String,
-      required:true
+    token: {
+      type: String,
+      required: true
     }
   }]
 });
 
-UserSchema.methods.toJSON = function (){
-var user = this;
-var userObject = user.toObject();
+UserSchema.methods.toJSON = function () {
+  var user = this;
+  var userObject = user.toObject();
 
-return _.pick(userObject, ["_id", "email"]);
+  return _.pick(userObject, ["_id", "email"]);
 };
 
-UserSchema.methods.generateAuthToken =  function (){
-  var user=this;
+UserSchema.methods.generateAuthToken = function () {
+  var user = this;
   var access = 'auth';
-  var token = jwt.sign({_id:user._id.toHexString(), access}, "123abc").toString();
+  var token = jwt.sign({ _id: user._id.toHexString(), access }, "123abc").toString();
 
-  user.tokens.push({access, token});
+  user.tokens.push({ access, token });
 
-  return user.save().then(()=>{
+  return user.save().then(() => {
     return token;
   });
 };
 
-UserSchema.statics.findByToken = function (token){
+UserSchema.statics.findByToken = function (token) {
   var user = this;
   var decoded;
 
-  try{
+  try {
     decoded = jwt.verify(token, "123abc");
-  }catch(e){
+  } catch (e) {
     return Promise.reject();
   }
 
   return user.findOne({
-    _id:decoded._id,
-    "tokens.token" : token,
-    "tokens.access" : "auth"
+    _id: decoded._id,
+    "tokens.token": token,
+    "tokens.access": "auth"
   });
 };
 
-var userModel = mongoose.model('user',UserSchema);
+UserSchema.pre("save", function (next) {
+  var user = this;
 
-module.exports = {userModel};
+  if (user.isModified("password")) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        console.log(hash);
+        next();
+      });
+    });
+
+  } else {
+    next();
+  }
+});
+
+var userModel = mongoose.model('user', UserSchema);
+
+module.exports = { userModel };
